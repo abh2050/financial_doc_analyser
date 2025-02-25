@@ -1,4 +1,5 @@
 # SEC Financial Analyzer
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Seal_of_the_United_States_Securities_and_Exchange_Commission.svg/640px-Seal_of_the_United_States_Securities_and_Exchange_Commission.svg.png)
 
 https://financialdocanalyser.streamlit.app/
 
