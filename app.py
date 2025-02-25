@@ -170,7 +170,7 @@ def download_filing(url, save_path, ticker, form, date):
     return None
 
 # **🔹 Build Vector Database with Pinecone v3.1.0**
-def build_vector_database(documents):
+def build_vector_database(documents, ticker):
     st.write("🚀 **Building Vector Database with Pinecone...**")
     progress_bar = st.progress(0)
     try:
@@ -190,15 +190,21 @@ def build_vector_database(documents):
         # Initialize Pinecone with the key from st.secrets
         pc = Pinecone(api_key=PINECONE_API_KEY)
         
-        # Create (or reference) the index
-        index_name = "financial-doc-analyzer-index"
-        if index_name not in pc.list_indexes().names():
-            pc.create_index(
-                name=index_name,
-                dimension=1536,
-                metric="cosine",
-                spec=ServerlessSpec(cloud="aws", region="us-east-1")
-            )
+        # Create a unique index per ticker symbol
+        index_name = f"financial-doc-analyzer-{ticker.lower()}"
+        
+        # Delete the existing index if it exists (clearing previous data)
+        if index_name in pc.list_indexes().names():
+            pc.delete_index(index_name)
+            st.warning(f"Cleared existing index for {ticker}. Rebuilding database.")
+
+        # Create a new index
+        pc.create_index(
+            name=index_name,
+            dimension=1536,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1")
+        )
         
         # Create vector store
         vectorstore = PineconeVectorStore.from_documents(
@@ -212,12 +218,13 @@ def build_vector_database(documents):
         retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
         
         progress_bar.progress(100)
-        st.success("Vector database built successfully!")
+        st.success(f"Vector database built successfully for {ticker}!")
         return retriever, index_name
 
     except Exception as e:
         st.error(f"Error: {str(e)}")
         raise
+
 
 # **🔹 RAG Chain with Gemini Generation**
 def rag_chain(question, retriever):
