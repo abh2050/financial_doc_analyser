@@ -145,6 +145,10 @@ financial_doc_analyzer/
 ```
 
 ---
+## APP
+https://financialdocanalyser.streamlit.app/
+![](https://github.com/abh2050/financial_doc_analyser/blob/main/pic1.png)
+![](https://github.com/abh2050/financial_doc_analyser/blob/main/pic2.png)
 
 ## FAQs and Troubleshooting
 
