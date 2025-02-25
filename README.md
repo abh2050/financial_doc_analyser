@@ -4,13 +4,24 @@
 https://financialdocanalyser.streamlit.app/
 
 
-Analyze SEC filings using AI-powered search and embeddings. This application uses:
-- **Google Gemini** (PaLM) to generate answers (via `google.generativeai`)
-- **OpenAI** embeddings to generate vector embeddings
-- **Pinecone** to store and query the embedded documents
-- **Streamlit** to provide an interactive UI
+# 🚀 AI-Powered SEC Filings Analysis  
 
-The tool fetches SEC filings (e.g., 10-K, 10-Q, 8-K) based on a company's Ticker, processes them (PDF or HTML), and builds a vector database. You can then query the filings to get answers with relevant citations.
+This cutting-edge application revolutionizes how you analyze SEC filings by leveraging AI-powered search and embeddings.  
+
+## 🔍 Instant Insights  
+No more sifting through dense **10-K, 10-Q, or 8-K** reports. Simply input a **ticker**, and the tool retrieves, processes, and stores filings in a structured vector database.  
+
+## 💡 AI-Driven Search  
+Ask financial, risk, or strategy-related questions and get **precise, context-aware answers**—complete with relevant citations—thanks to **Google Gemini (PaLM)**.  
+
+## ⚡ Optimized for Speed & Accuracy  
+- **OpenAI embeddings** generate high-quality vector representations of financial documents.  
+- **Pinecone** ensures **fast and scalable** search across filings.  
+- **Streamlit** delivers a **seamless, interactive UI** for easy exploration.  
+
+### 🚀 Why This Is Cool  
+Whether you're an **investor, analyst, or researcher**, this tool **makes SEC filing analysis smarter, faster, and more efficient**—turning unstructured financial data into **actionable insights in seconds**.  
+
 
 ---
 
