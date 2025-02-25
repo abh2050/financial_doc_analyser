@@ -1,0 +1,6 @@
+{
+    "models": {
+        "embedding": "text-embedding-ada-002",
+        "generation": "gemini-pro"
+    }
+}

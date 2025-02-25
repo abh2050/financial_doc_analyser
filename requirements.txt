@@ -1,0 +1,15 @@
+streamlit==1.39.0
+requests==2.32.3
+google-generativeai==0.8.4
+pandas==2.2.2
+beautifulsoup4==4.12.3
+langchain==0.3.19
+langchain-community==0.3.18
+langchain-chroma==0.2.1
+langchain-core==0.3.39
+langchain-openai==0.3.7
+pinecone-client==3.1.0
+python-dotenv==1.0.1
+PyMuPDF==1.25.3
+unstructured==0.12.3
+tiktoken==0.8.0
