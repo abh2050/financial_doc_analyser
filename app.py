@@ -386,7 +386,7 @@ def main():
                         st.success(f"Processed {len(documents)} document chunks.")
                         st.session_state["documents"] = documents
                         with st.spinner("Building vector database..."):
-                            retriever, index_name = build_vector_database(documents)
+                            retriever, index_name = build_vector_database(documents, ticker)
                             st.session_state["retriever"] = retriever
                             st.session_state["index_name"] = index_name
                             st.success("Vector database built successfully!")
