@@ -95,7 +95,7 @@ Whether you're an **investor, analyst, or researcher**, this tool **makes SEC fi
    pip install -r requirements.txt
    ```
 
-4. **Create a `config.toml` File**:
+4. **Create a `.streamlit/secrets.toml` File**:
    ```toml
    GEMINI_API_KEY = "your_gemini_api_key_here"
    OPENAI_API_KEY = "your_openai_api_key_here"
@@ -114,23 +114,15 @@ Whether you're an **investor, analyst, or researcher**, this tool **makes SEC fi
 
 ## Configuration
 
-All API keys are read from `config.toml`:
+All API keys are read from `.streamlit/secrets.toml`:
 
 ```python
-import toml
-
-try:
-    with open("config.toml", "r") as f:
-        config_data = toml.load(f)
-except FileNotFoundError:
-    raise RuntimeError("config.toml file not found. Please create a config.toml with your API keys.")
-
 GEMINI_API_KEY = config_data.get("GEMINI_API_KEY")
 OPENAI_API_KEY = config_data.get("OPENAI_API_KEY")
 PINECONE_API_KEY = config_data.get("PINECONE_API_KEY")
 ```
 
-Make sure your `config.toml` has these keys defined.
+Make sure your `.streamlit/secrets.toml` has these keys defined.
 
 ---
 
@@ -150,7 +142,6 @@ Make sure your `config.toml` has these keys defined.
 ```
 financial_doc_analyzer/
 ├── app.py                  # Main Streamlit app
-├── config.toml             # TOML file with API keys (not in repo)
 ├── requirements.txt        # Python dependencies
 ├── README.md               # This README
 ├── ...
