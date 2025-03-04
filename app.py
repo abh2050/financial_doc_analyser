@@ -313,17 +313,64 @@ def main():
     st.set_page_config(page_title="SEC Financial Analyzer", page_icon="📄", layout="wide")
 
     # Dark mode styling
+    # -- Dark Mode Styling (Professional Look) --
     st.markdown("""
         <style>
-            body {
-                color: white !important;
-                background-color: #F0F0F0 !important;
-            }
-            .stApp {
-                background-color: #F0F0F0 !important;
-            }
+        /* Overall background for the main app */
+        .stApp {
+            background-color: #2C3E50;
+        }
+
+        /* Text color */
+        body, .stApp, .markdown-text-container {
+            color: #ECF0F1;
+            font-family: "Helvetica", sans-serif;
+        }
+
+        /* Modify sidebar background */
+        [data-testid="stSidebar"] {
+            background-color: #1F2B38;
+        }
+
+        /* Headings color */
+        h1, h2, h3, h4, h5, h6 {
+            color: #3498DB;
+        }
+
+        /* Style buttons */
+        .stButton>button {
+            background-color: #3498DB;
+            color: #ECF0F1;
+            border: none;
+            border-radius: 5px;
+            padding: 0.6em 1em;
+        }
+
+        /* Hover effect for buttons */
+        .stButton>button:hover {
+            opacity: 0.9;
+        }
+
+        /* Style text input fields (text_input, text_area, etc.) */
+        input[type="text"], textarea, .stTextInput>div>div>input, .stTextArea>div>textarea {
+            background-color: #37404A;
+            color: #ECF0F1;
+            border: 1px solid #555;
+        }
+
+        /* Style selectbox, multiselect, etc. */
+        .stSelectbox>div>div>input, .stMultiSelect>div>div>div>input {
+            background-color: #37404A;
+            color: #ECF0F1;
+        }
+
+        /* Style slider text (optional) */
+        .stSlider>div>div>span {
+            color: #ECF0F1;
+        }
         </style>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
 
     st.title("📄 SEC Financial Analyzer")
     st.markdown("Analyze SEC filings using AI-powered search and embeddings.")
