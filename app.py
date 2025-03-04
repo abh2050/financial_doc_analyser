@@ -19,16 +19,16 @@ from langchain_community.vectorstores import Pinecone
 from langchain_community.vectorstores.pinecone import Pinecone as PineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 
-# ---- NEW: Import toml (or tomli) and load config.toml
-import toml
+# # ---- NEW: Import toml (or tomli) and load config.toml
+# import toml
 
-try:
-    with open("config.toml", "r") as f:
-        config_data = toml.load(f)
-except FileNotFoundError:
-    raise RuntimeError(
-        "config.toml file not found. Please create a config.toml with your API keys."
-    )
+# try:
+#     with open("config.toml", "r") as f:
+#         config_data = toml.load(f)
+# except FileNotFoundError:
+#     raise RuntimeError(
+#         "config.toml file not found. Please create a config.toml with your API keys."
+#     )
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -53,9 +53,9 @@ CONFIG = {
 }
 
 # ---- NEW: Load keys from config_data (instead of os.getenv)
-GEMINI_API_KEY = config_data.get("GEMINI_API_KEY")
-OPENAI_API_KEY = config_data.get("OPENAI_API_KEY")
-PINECONE_API_KEY = config_data.get("PINECONE_API_KEY")
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 
 # Validate keys
 if not GEMINI_API_KEY:
