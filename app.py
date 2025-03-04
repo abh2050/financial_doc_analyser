@@ -326,7 +326,7 @@ def main():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        start_year = st.number_input("Start Year:", min_value=2000, max_value=datetime.now().year, value=2022)
+        start_year = st.number_input("Start Year:", min_value=2000, max_value=datetime.now().year, value=2024)
     with col2:
         end_year = st.number_input("End Year:", min_value=2000, max_value=datetime.now().year, value=datetime.now().year)
     with col3:
