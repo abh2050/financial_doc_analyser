@@ -188,38 +188,48 @@ def build_vector_database(documents):
     st.write("🚀 **Building Vector Database with Pinecone...**")
     progress_bar = st.progress(0)
     try:
-        # Split documents
+        # 1️⃣ Split the documents into chunks
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=CONFIG["chunk_size"],
             chunk_overlap=CONFIG["chunk_overlap"]
         )
         chunks = text_splitter.split_documents(documents)
         
-        # Initialize embeddings with the OpenAI API key from .toml
-        embedding_model = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API_KEY)
+        # 2️⃣ Initialize the embedding model with OpenAI
+        embedding_model = OpenAIEmbeddings(
+            model="text-embedding-ada-002", 
+            openai_api_key=OPENAI_API_KEY
+        )
         
-        # Initialize Pinecone with the key from .toml
+        # 3️⃣ Initialize Pinecone
         pc = Pinecone(api_key=PINECONE_API_KEY)
-        
-        # Create (or reference) the index
         index_name = "financial-doc-analyzer-index"
-        if index_name not in pc.list_indexes().names():
+
+        # 4️⃣ If the index exists, clear its contents; otherwise, create it
+        existing_indexes = pc.list_indexes().names()
+        if index_name in existing_indexes:
+            st.write(f"Clearing existing Pinecone index: **{index_name}**")
+            existing_index = pc.Index(index_name)
+            existing_index.delete(deleteAll=True)
+        else:
+            st.write(f"Creating new Pinecone index: **{index_name}**")
             pc.create_index(
                 name=index_name,
-                dimension=1536,
+                dimension=1536,  # dimension for text-embedding-ada-002
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
         
-        # Create vector store
+        # 5️⃣ Create the vector store (this upserts embeddings for all chunks)
+        st.write("Upserting documents into Pinecone...")
         vectorstore = PineconeVectorStore.from_documents(
             documents=chunks,
             embedding=embedding_model,
             index_name=index_name,
-            text_key="text"
+            text_key="text"  # maps Document.page_content -> Pinecone "text" field
         )
         
-        # Create retriever
+        # 6️⃣ Create a retriever for query-time lookups
         retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
         
         progress_bar.progress(100)
@@ -227,8 +237,9 @@ def build_vector_database(documents):
         return retriever, index_name
 
     except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.error(f"Error building vector database: {str(e)}")
         raise
+
 
 # **🔹 RAG Chain with Gemini Generation**
 def rag_chain(question, retriever):
