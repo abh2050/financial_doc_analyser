@@ -311,19 +311,22 @@ def fetch_alternative_sec_filings(cik, ticker, form_types, start_year, end_year)
 # **🔹 Streamlit App**
 def main():
     st.set_page_config(page_title="SEC Financial Analyzer", page_icon="📄", layout="wide")
+
+    # Dark mode styling
+    st.markdown("""
+        <style>
+            body {
+                color: white !important;
+                background-color: #0E1117 !important;
+            }
+            .stApp {
+                background-color: #0E1117 !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
     st.title("📄 SEC Financial Analyzer")
     st.markdown("Analyze SEC filings using AI-powered search and embeddings.")
-    st.markdown("""
-    <style>
-        body {
-            color: white !important;
-            background-color: #0E1117 !important;
-        }
-        .stApp {
-            background-color: #0E1117 !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
     
     ticker = st.text_input("Enter Ticker Symbol (e.g., AAPL):", key="download_ticker").strip().upper()
     if ticker:
