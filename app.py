@@ -320,7 +320,7 @@ def main():
                 background-color: #F0F0F0 !important;
             }
             .stApp {
-                background-color: #0E1117 !important;
+                background-color: #F0F0F0 !important;
             }
         </style>
         """, unsafe_allow_html=True)
