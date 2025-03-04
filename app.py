@@ -317,7 +317,7 @@ def main():
         <style>
             body {
                 color: white !important;
-                background-color: #0E1117 !important;
+                background-color: #F0F0F0 !important;
             }
             .stApp {
                 background-color: #0E1117 !important;
