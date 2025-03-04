@@ -313,6 +313,17 @@ def main():
     st.set_page_config(page_title="SEC Financial Analyzer", page_icon="📄", layout="wide")
     st.title("📄 SEC Financial Analyzer")
     st.markdown("Analyze SEC filings using AI-powered search and embeddings.")
+    st.markdown("""
+    <style>
+        body {
+            color: white !important;
+            background-color: #0E1117 !important;
+        }
+        .stApp {
+            background-color: #0E1117 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
     
     ticker = st.text_input("Enter Ticker Symbol (e.g., AAPL):", key="download_ticker").strip().upper()
     if ticker:
