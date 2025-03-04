@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from langchain_community.document_loaders import PyMuPDFLoader, UnstructuredHTMLLoader, BSHTMLLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
