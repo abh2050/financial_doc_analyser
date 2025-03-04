@@ -8,21 +8,28 @@ import logging
 import time
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-from langchain_community.document_loaders import PyMuPDFLoader, BSHTMLLoader
+from langchain_community.document_loaders import PyMuPDFLoader, UnstructuredHTMLLoader, BSHTMLLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-# LangChain and Pinecone
 from langchain_community.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Pinecone as PineconeVectorStore
 from langchain_community.vectorstores import Pinecone
 from langchain_community.vectorstores.pinecone import Pinecone as PineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 
-# -------------------------------------------------
-# REMOVE references to config.toml; use st.secrets
-# -------------------------------------------------
+# ---- NEW: Import toml (or tomli) and load config.toml
+import toml
+
+try:
+    with open("config.toml", "r") as f:
+        config_data = toml.load(f)
+except FileNotFoundError:
+    raise RuntimeError(
+        "config.toml file not found. Please create a config.toml with your API keys."
+    )
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -46,15 +53,22 @@ CONFIG = {
     "sec_request_delay": 0.1
 }
 
-# ---------------------------------------------
-# Load API keys from st.secrets
-# ---------------------------------------------
-try:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-    PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
-except KeyError as e:
-    st.error(f"Missing a required secret: {e}")
+# ---- NEW: Load keys from config_data (instead of os.getenv)
+GEMINI_API_KEY = config_data.get("GEMINI_API_KEY")
+OPENAI_API_KEY = config_data.get("OPENAI_API_KEY")
+PINECONE_API_KEY = config_data.get("PINECONE_API_KEY")
+
+# Validate keys
+if not GEMINI_API_KEY:
+    st.error("GEMINI_API_KEY not found in config.toml. Please set it before running the app.")
+    st.stop()
+
+if not OPENAI_API_KEY:
+    st.error("OPENAI_API_KEY not found in config.toml. Please set it before running the app.")
+    st.stop()
+
+if not PINECONE_API_KEY:
+    st.error("PINECONE_API_KEY not found in config.toml. Please set it before running the app.")
     st.stop()
 
 # Initialize Google Gemini API
@@ -69,7 +83,6 @@ def get_cik_by_ticker(ticker):
         response = requests.get(ticker_url, headers=headers)
         response.raise_for_status()
         data = response.json()
-
         for item in data.values():
             if item['ticker'].lower() == ticker.lower():
                 return str(item['cik_str']).zfill(10)
@@ -113,7 +126,6 @@ def fetch_sec_filings(cik, form_types, start_year, end_year):
 # **🔹 Document Processing**
 def process_pdf(pdf_path):
     """Processes a PDF file into text chunks."""
-    from langchain_core.documents import Document  # Ensure in scope
     try:
         loader = PyMuPDFLoader(pdf_path)
         documents = loader.load()
@@ -124,11 +136,9 @@ def process_pdf(pdf_path):
 
 def process_html(html_path):
     """Extracts text from an HTML file."""
-    from langchain_core.documents import Document  # Ensure in scope
     try:
         loader = BSHTMLLoader(html_path)
         documents = loader.load()
-        # If the loader returns empty or whitespace, try a fallback
         if not documents or not documents[0].page_content.strip():
             with open(html_path, "r", encoding="utf-8", errors="ignore") as file:
                 soup = BeautifulSoup(file, "html.parser")
@@ -169,8 +179,13 @@ def download_filing(url, save_path, ticker, form, date):
     logger.error(f"Failed to download {url} after multiple attempts")
     return None
 
+# **🔹 Build Vector Database with Pinecone**
+from pinecone import Pinecone, ServerlessSpec
+from langchain_community.vectorstores import Pinecone as PineconeVectorStore
+from langchain_openai import OpenAIEmbeddings
+
 # **🔹 Build Vector Database with Pinecone v3.1.0**
-def build_vector_database(documents, ticker):
+def build_vector_database(documents):
     st.write("🚀 **Building Vector Database with Pinecone...**")
     progress_bar = st.progress(0)
     try:
@@ -181,30 +196,21 @@ def build_vector_database(documents, ticker):
         )
         chunks = text_splitter.split_documents(documents)
         
-        # Initialize embeddings with the OpenAI API key
-        embedding_model = OpenAIEmbeddings(
-            model="text-embedding-ada-002", 
-            openai_api_key=OPENAI_API_KEY
-        )
+        # Initialize embeddings with the OpenAI API key from .toml
+        embedding_model = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API_KEY)
         
-        # Initialize Pinecone with the key from st.secrets
+        # Initialize Pinecone with the key from .toml
         pc = Pinecone(api_key=PINECONE_API_KEY)
         
-        # Create a unique index per ticker symbol
-        index_name = f"financial-doc-analyzer-{ticker.lower()}"
-        
-        # Delete the existing index if it exists (clearing previous data)
-        if index_name in pc.list_indexes().names():
-            pc.delete_index(index_name)
-            st.warning(f"Cleared existing index for {ticker}. Rebuilding database.")
-
-        # Create a new index
-        pc.create_index(
-            name=index_name,
-            dimension=1536,
-            metric="cosine",
-            spec=ServerlessSpec(cloud="aws", region="us-east-1")
-        )
+        # Create (or reference) the index
+        index_name = "financial-doc-analyzer-index"
+        if index_name not in pc.list_indexes().names():
+            pc.create_index(
+                name=index_name,
+                dimension=1536,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1")
+            )
         
         # Create vector store
         vectorstore = PineconeVectorStore.from_documents(
@@ -218,13 +224,12 @@ def build_vector_database(documents, ticker):
         retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
         
         progress_bar.progress(100)
-        st.success(f"Vector database built successfully for {ticker}!")
+        st.success("Vector database built successfully!")
         return retriever, index_name
 
     except Exception as e:
         st.error(f"Error: {str(e)}")
         raise
-
 
 # **🔹 RAG Chain with Gemini Generation**
 def rag_chain(question, retriever):
@@ -235,7 +240,6 @@ def rag_chain(question, retriever):
             return "No relevant information found.", None
         context_parts = [f"[DOC {i+1}]\n{doc.page_content}" for i, doc in enumerate(retrieved_docs)]
         context = "\n\n".join(context_parts)
-
         formatted_prompt = f"""
         You are a financial expert analyzing SEC filings (10-K, 10-Q, 8-K).
         
@@ -373,14 +377,9 @@ def main():
                             elif file_path.lower().endswith((".htm", ".html")):
                                 doc_chunks = process_html(file_path)
                             else:
-                                # Plain text fallback
-                                try:
-                                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                                        content = f.read()
-                                except Exception as e:
-                                    content = f"Error reading file {file_path}: {e}"
+                                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                                    content = f.read()
                                 doc_chunks = [Document(page_content=content, metadata={"source": file_path})]
-                            
                             documents.extend(doc_chunks)
                             progress_bar.progress((i + 1) / len(downloaded_files))
                         st.success(f"Processed {len(documents)} document chunks.")
@@ -390,7 +389,6 @@ def main():
                             st.session_state["retriever"] = retriever
                             st.session_state["index_name"] = index_name
                             st.success("Vector database built successfully!")
-
     if "retriever" in st.session_state:
         st.markdown("---")
         st.subheader("📊 Query SEC Filings")
@@ -406,14 +404,12 @@ def main():
             question = selected_example
         else:
             question = st.text_area("Ask a question about the filings:", height=100)
-        
         if st.button("Generate Answer") and question:
             retriever = st.session_state["retriever"]
             with st.spinner("Generating answer..."):
                 answer, sources = rag_chain(question, retriever)
                 st.markdown("### Answer")
                 st.markdown(answer)
-                
                 if sources:
                     with st.expander("View Sources"):
                         for i, doc in enumerate(sources):
